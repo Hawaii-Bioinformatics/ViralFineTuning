@@ -37,3 +37,6 @@ checkpoint*/
 # IPython
 profile_default/
 ipython_config.py
+
+# zip file
+*.zip

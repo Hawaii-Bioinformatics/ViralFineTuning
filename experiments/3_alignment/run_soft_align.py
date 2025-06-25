@@ -2,104 +2,34 @@
 import sys
 import os
 from collections import defaultdict
-import time
-from Bio import SeqIO
 import pandas as pd
 import torch.nn  as nn
 import torch
 import networkx as nx
-from io import StringIO
 import numpy as np
 from sklearn.decomposition import PCA
 cos = nn.CosineSimilarity(dim=0, eps=1e-6)
 top_n = 4
 min_diagonal_length = 10
 max_mismatches = 3
-import pickle
 
-# directories
-data_dir = "/data/rajan/vog"
-pkl_dir = f"{data_dir}/data-pkls"
-msa_fasta_dir = f"{data_dir}/fasta"
+import pdb
 
-saved_mod_dir = "saved_mods"
-plot_dir = "plots/new"
+error_seq_ids = []
 
-emb_dir = f"{data_dir}/emb"
-esm2_3B_emb_dir = f"{emb_dir}/esm2_3B"
-esm2_3B_seq_emb_dir = f"{esm2_3B_emb_dir}/seq"
-
-
-selected_data = pickle.load(open('sa_selected_data.pkl', 'rb'))
-
-error_seqs = []
-device = 'cuda:1'
-
-
-def get_scores(qid, hid, output_filename, main_emb_dir, layer):
-    pt_emb_path = os.path.join(main_emb_dir, 'pre-trained')
-    ft_cls_lora_emb_path = os.path.join(main_emb_dir, 'ft_cls_lora')
-    ft_mlm_lora_emb_path = os.path.join(main_emb_dir, 'ft_mlm_lora')
-    ft_cont_emb_path = os.path.join(main_emb_dir, 'contrastive')
-    try:
-        seq1_str = selected_data[selected_data.seq_id==qid].seq_str.item()
-        seq2_str = selected_data[selected_data.seq_id==hid].seq_str.item()
-        if(len(seq1_str)>1024 or len(seq2_str)>1024):
-            print('too long - ignoring')
-            print('seq1_id:', qid, '\t', 'seq2_id:', hid)
-            if qid not in error_seqs:
-                error_seqs.append(qid)
-            if hid not in error_seqs:
-                error_seqs.append(qid)
-            return
+def get_scores(qid, hid, seq1_str, seq2_str, emb_dir, device='cpu'):
+        seq1_emb = torch.load(f'{emb_dir}/{qid}.pt')[0].to(device) # (L, D)
+        seq2_emb = torch.load(f'{emb_dir}/{hid}.pt')[0].to(device) # (L, D)
         
-        # pt
-        seq1_emb = torch.load(f"{pt_emb_path}/{qid}.pt")["representations"][layer].to(device)
-        seq2_emb = torch.load(f"{pt_emb_path}/{hid}.pt")["representations"][layer].to(device)
-        # cls-lora
-        seq1_ft_cls_lora_emb = torch.load(f'{ft_cls_lora_emb_path}/{qid}.pt')[1:-1].to(device)
-        seq2_ft_cls_lora_emb = torch.load(f'{ft_cls_lora_emb_path}/{hid}.pt')[1:-1].to(device)
-        # mlm-lora
-        seq1_ft_mlm_lora_emb = torch.load(f'{ft_mlm_lora_emb_path}/{qid}.pt')[1:-1].to(device)
-        seq2_ft_mlm_lora_emb = torch.load(f'{ft_mlm_lora_emb_path}/{hid}.pt')[1:-1].to(device)
-        # cont
-        seq1_ft_cont_emb = torch.from_numpy(np.load(f"{ft_cont_emb_path}/{qid}.npy")[1:-1]).to(device) # for contrastive
-        seq2_ft_cont_emb = torch.from_numpy(np.load(f"{ft_cont_emb_path}/{hid}.npy")[1:-1]).to(device)
-
         data = get_data_matrix(seq1_emb, seq2_emb)
-        data_ft_cls_lora = get_data_matrix(seq1_ft_cls_lora_emb, seq2_ft_cls_lora_emb)
-        data_ft_mlm_lora = get_data_matrix(seq1_ft_mlm_lora_emb, seq2_ft_mlm_lora_emb)
-        data_ft_cont = get_data_matrix(seq1_ft_cont_emb, seq2_ft_cont_emb)
-
+        
         matches = get_matches_new(seq1_str, seq2_str, data)
-        matches_ft_cls_lora = get_matches_new(seq1_str, seq2_str, data_ft_cls_lora)
-        matches_ft_mlm_lora = get_matches_new(seq1_str, seq2_str, data_ft_mlm_lora)
-        matches_ft_cont = get_matches_new(seq1_str, seq2_str, data_ft_cont)
-
-        longest_path = get_longest_path(data, matches)
-        longest_path_ft_cls_lora = get_longest_path(data_ft_cls_lora, matches_ft_cls_lora)
-        longest_path_ft_mlm_lora = get_longest_path(data_ft_mlm_lora, matches_ft_mlm_lora)
-        longest_path_ft_cont = get_longest_path(data_ft_cont, matches_ft_cont)
-
-        score = sum([data.iloc[x] for x in longest_path])
-        score_ft_cls_lora = sum([data_ft_cls_lora.iloc[x] for x in longest_path_ft_cls_lora])
-        score_ft_mlm_lora = sum([data_ft_mlm_lora.iloc[x] for x in longest_path_ft_mlm_lora])
-        score_ft_cont = sum([data_ft_cont.iloc[x] for x in longest_path_ft_cont])
-
-        with open(f"results/{output_filename}", 'a') as f:
-            # f.write("\tLen_pt\tLen_ft\tScore_pt\tScore_ft\tSeq1_id\tSeq2_id\tLen_seq1\tLen_seq2\n")
-            f.write(f"\t{len(longest_path)}\t{len(longest_path_ft_cls_lora)}\t{len(longest_path_ft_mlm_lora)}\t{len(longest_path_ft_cont)}\t{score}\t{score_ft_cls_lora}\t{score_ft_mlm_lora}\t{score_ft_cont}\t{qid}\t{hid}\t{len(seq1_str)}\t{len(seq2_str)}\n")
-    except Exception as e:
-        print(e)
-        print('seq1_id:', qid, '\t', 'seq2_id:', hid)
-        if qid not in error_seqs:
-            error_seqs.append(qid)
-        if hid not in error_seqs:
-            error_seqs.append(qid)
-    with open('error_seqs_vog.txt', 'a') as f:
-        for seq in error_seqs:
-            f.write(f"{seq}\n")
-    return
+        
+        paths = get_longest_path(data, matches)
+        
+        score = sum([data.iloc[x] for x in paths])
+        
+        return len(paths), score
 
 
 i = 0
@@ -431,19 +361,27 @@ def get_longest_path(data, matches):
     return longest_path
 
 
-def soft_align_time_new(seq_1_str, seq_2_str, seq_1_embedding, seq_2_embedding, pca_matrix = False): 
-    if pca_matrix :
-        data = approximate_similarity_matrix(seq_1_embedding,seq_2_embedding)
-    else : 
-        data = get_data_matrix(seq_1_embedding, seq_2_embedding)
-    matches = get_matches_new(seq_1_str, seq_2_str, data)
-    longest_path = get_longest_path(data, matches)
+
+if __name__ == "__main__":
+    qid, hid, q_str, h_str = sys.argv[1:5]
+    emb_dir = sys.argv[5]
+    output_filename = sys.argv[6]
+    device = sys.argv[7]
     
-    return longest_path
-
-qid = str(sys.argv[1])
-hid = str(sys.argv[2])
-output_filename = str(sys.argv[3])
-get_scores(qid, hid, output_filename, esm2_3B_seq_emb_dir, layer=36)
-
-
+    try:
+        if(len(q_str)>1024 or len(h_str)>1024):
+            print('Length over 1024 amino acids - skipping. seq1_id:', qid, f'({len(q_str)})', '\t', 'seq2_id:', hid, f'({len(h_str)})')
+            if qid not in error_seq_ids:
+                error_seq_ids.append(qid)
+            if hid not in error_seq_ids:
+                error_seq_ids.append(qid)
+        else:
+            path_len, score = get_scores(qid, hid, q_str, h_str, emb_dir, device)
+            # Safe append
+            with open(output_filename, "a") as f:
+                f.write(f"{path_len}\t{score}\t{qid}\t{hid}\t{len(q_str)}\t{len(h_str)}\n")
+    except Exception as e:
+        print(e)
+        with open('error_seqs_sa.txt', 'a') as f:
+            for seq_id in error_seq_ids:
+                f.write(f"{seq_id}\n")

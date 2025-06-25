@@ -9,6 +9,83 @@ William Harrigan, Shawn W. Polson, K. Eric Wommack, and Mahdi Belcaid
 Model weights available at:
 https://huggingface.co/rsawhney/fine-tuning-plms
 
+---
+
+### Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+### Data
+
+Download data from releases or use:
+```bash
+wget https://github.com/user-attachments/files/20893788/viral_fine_tuning_data.zip
+```
+### Model fine-tuning
+
+To run fine-tuning code provided in pLMs/:
+
+for MLM or Classification fine-tuning:
+```bash
+# modify training data as needed in code
+python train.py
+```
+
+for contrastive fine-tuning with huggingface checkpoint of base model:
+```
+python entrypoint.py --train --base-model facebook/esm2_t36_3B_UR50D --protocol siamese --epochs 8 --learning-rate 0.0000005 --model-parallelism --batch-size 16 --checkpoint_frequency 14400 --max-length 1024
+```
+
+---
+
+### Running experiments
+
+Embedding must be generated prior to running these experiments
+
+#### [1] Pairwise-comparison based experiments
+
+Homologous sequences
+
+```bash
+python run_homologous_cos_sim.py --emb_dir=emb/
+```
+Conserved columns
+
+```bash
+python run_cons_col_sim_esm.py --emb_dir=emb/ --plot_dir=plots/conserved
+```
+Non-conserved columns
+
+```bash
+python run_non_cons_col_sim_esm.py --emb_dir=emb --plot_dir=plots/non-conserved
+```
+
+
+#### [2]  HDBSCAN sequence clustering
+
+```bash
+python prep_mean_emb_data.py --emb_dir emb/
+
+# 10 parallel jobs for a total of 1000 iterations
+parallel -j 10 python hdbscan_esm.py {} esm_mean_emb.pkl ::: {0..1000}
+```
+
+#### [3] Soft alignments
+
+```bash
+python save_seq_pairs_per_grp.py
+
+# 10 parallel jobs; results saved to output.tsv; use cuda or cpu
+cat all_pairs_file.tsv | parallel -j 10 --colsep '\t' \
+    python run_soft_align.py {1} {2} {3} {4} emb/ output.tsv cuda
+```
+
+---
+
 ### Example to generate and load embeddings: 
 
 #### Read protein sequences

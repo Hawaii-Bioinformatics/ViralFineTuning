@@ -16,7 +16,7 @@ import sys
 import pdb
 
 # Add the parent directory to sys.path
-sys.path.append('/home/rsawhney/progen/progen2/')
+sys.path.append('progen/progen2/')
 
 from models.progen.modeling_progen import ProGenForCausalLM, ProGenForSequenceClassification
 from models.progen.configuration_progen import ProGenConfig
@@ -45,7 +45,7 @@ def create_tokenizer_custom(file):
         return Tokenizer.from_str(f.read())
 
 # TOKENIZER
-vocab_file = "/home/rsawhney/progen/progen2/tokenizer.json"
+vocab_file = "progen/progen2/tokenizer.json" # from progen repo
 
 tokenizer = create_tokenizer_custom(vocab_file)
 # DATATA
@@ -102,7 +102,7 @@ class CustomDataset(Dataset):
             }
 
 
-train_dataset = pd.read_csv("/home/rsawhney/PooledAAEmbeddings/tmp/tmp_data_dir/train.tsv")
+train_dataset = pd.read_csv("train.tsv")
 vog_min_number_seqs = 10
 is_gt_than_min = train_dataset["#GroupName"].value_counts() >= vog_min_number_seqs
 vogs_gt_min = train_dataset["#GroupName"].value_counts()[is_gt_than_min].index.unique()
@@ -163,7 +163,7 @@ test_labels = labels_to_one_hot(test_labels, num_labels)
 
 # MODEL
 
-ckpt = "/home/rsawhney/progen/progen2/checkpoints/progen2-large/"
+ckpt = "progen/progen2/checkpoints/progen2-large/" # from their repo
 
 model = create_model(ckpt=ckpt, fp16=args_fp16, type = "classification")
 #print(model)
@@ -213,10 +213,6 @@ test_list = [data for data in test_dataloader]
 
 import pdb
 pdb.set_trace()
-
-# import pickle
-# with open('/home/rsawhney/models/test_tokenized_no_clm_progen.pkl','wb') as file :
-#    pickle.dump(test_list, file)
 
 training_args = transformers.TrainingArguments(
     output_dir="./results-progen-mlm",

@@ -102,8 +102,7 @@ learning_rate = 1e-4
 # )
 
 print('Reading data')
-# train_dataset = pd.read_csv("./train.tsv")
-train_dataset = pd.read_csv("/home/rsawhney/PooledAAEmbeddings/train.tsv")
+train_dataset = pd.read_csv("train.tsv")
 
 
 # Keep only vogs with 10 sequences since we classify back to the vog
@@ -200,25 +199,6 @@ test_dataset = CustomDataset(tokenizer= tokenizer, input_ids=test_input_ids, att
 
 
 
-# test_list = [data for data in test_dataset]
-# import pickle
-# with open('/home/thibaut/protrans/esm_test_set.pkl', 'wb') as file :
-#     pickle.dump(test_list, file)
-
-# print(1+'e')
-# generate the DatasetDict
-# trn = Dataset.from_dict({'labels':train_df.labels,'protein_id':train_df.protein_id, 'protein_seq': train_df.protein_seq})
-# tst = Dataset.from_dict({'labels':test_df.labels,'protein_id':test_df.protein_id, 'protein_seq': test_df.protein_seq})
-# dataset_dict = DatasetDict({'train': trn, 'validation': tst})
-
-# accuracy = evaluate.load("accuracy")
-
-# define an evaluation function to pass into trainer later
-# def compute_metrics(p):
-#    predictions, labels = p
-#    predictions = np.argmax(predictions, axis=1)
-#    return accuracy.compute(predictions=predictions, references=labels)
-
 
 # Tokenize dataset fpr 
 def tokenize_and_format(dataset):
@@ -266,7 +246,6 @@ trainer = Trainer(
     tokenizer=tokenizer
     #compute_metrics=compute_metrics
 )
-#ckpt = '/home/thibaut/protrans/esm_3b_cls_1024/results-esm-cls-lora-1024/checkpoint-2000/'
 ckpt = './results-esm-cls-strat/checkpoint-1600/'
 trainer.train(resume_from_checkpoint=ckpt)
 #trainer.train()

@@ -103,8 +103,7 @@ learning_rate = 1e-5
 # )
 
 print('Reading data')
-# train_dataset = pd.read_csv("/home/thibaut/protrans/train.tsv")
-train_dataset = pd.read_csv("/home/rsawhney/PooledAAEmbeddings/tmp/tmp_data_dir/train.tsv")
+train_dataset = pd.read_csv("train.tsv")
 # Keep only vogs with 10 sequences since we classify back to the vog
 
 vog_min_number_seqs = 10
@@ -197,27 +196,6 @@ train_dataset = CustomDataset(tokenizer= tokenizer, input_ids=input_ids, attenti
 test_dataset = CustomDataset(tokenizer= tokenizer, input_ids=test_input_ids, attention_mask=test_attention_mask, labels = test_labels)
 
 
-
-# test_list = [data for data in test_dataset]
-# import pickle
-# with open('/home/thibaut/protrans/esm_test_set.pkl', 'wb') as file :
-#     pickle.dump(test_list, file)
-
-# print(1+'e')
-# generate the DatasetDict
-# trn = Dataset.from_dict({'labels':train_df.labels,'protein_id':train_df.protein_id, 'protein_seq': train_df.protein_seq})
-# tst = Dataset.from_dict({'labels':test_df.labels,'protein_id':test_df.protein_id, 'protein_seq': test_df.protein_seq})
-# dataset_dict = DatasetDict({'train': trn, 'validation': tst})
-
-# accuracy = evaluate.load("accuracy")
-
-# define an evaluation function to pass into trainer later
-# def compute_metrics(p):
-#    predictions, labels = p
-#    predictions = np.argmax(predictions, axis=1)
-#    return accuracy.compute(predictions=predictions, references=labels)
-
-
 # Tokenize dataset fpr 
 def tokenize_and_format(dataset):
     tokenized_outputs = tokenizer.batch_encode_plus(
@@ -264,10 +242,9 @@ trainer = Trainer(
     tokenizer=tokenizer
     #compute_metrics=compute_metrics
 )
-#ckpt = '/home/thibaut/protrans/esm_3b_cls_1024/results-esm-cls-lora-1024/checkpoint-2000/'
-#trainer.train(resume_from_checkpoint=ckpt)
-checkpoint = "./results-esm-mlm/checkpoint-800/"
-trainer.train(resume_from_checkpoint = checkpoint)
+# checkpoint = "./results-esm-mlm/checkpoint-800/"
+# trainer.train(resume_from_checkpoint = checkpoint)
+trainer.train()
 print('Model trained')
 
 out_name = f"vog_{mod_name}_{num_train_epochs}ep_{learning_rate}lr_ns"
