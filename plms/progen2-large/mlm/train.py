@@ -199,7 +199,7 @@ for name, param in model.named_parameters():
 
 pdb.set_trace()
 
-mlm = False
+mlm = True
 if mlm : 
     labels, test_labels = input_ids, test_input_ids
     
