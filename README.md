@@ -21,7 +21,13 @@ pip install -r requirements.txt
 
 ### Data
 
-Download data from releases or use:
+
+1. VOG proteins sequences used to fine-tune pLMs (in .tsv format)
+```bash
+wget https://huggingface.co/rsawhney/fine-tuning-plms/blob/main/train.tsv
+```
+
+2. VOG test subset in required format for running evaluation experiments (as pandas dataframe and python dictionary)
 ```bash
 wget https://github.com/user-attachments/files/20893788/viral_fine_tuning_data.zip
 ```
