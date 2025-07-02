@@ -220,10 +220,6 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    # plot_dir = "plots/conserved"
-    # emb_dir = "/home/rsawhney/emb"
-    # esm_msa_emb_dir = f"{emb_dir}/esm/msa/"
-
     emb_dir = args.emb_dir
     plot_dir = args.plot_dir
 
