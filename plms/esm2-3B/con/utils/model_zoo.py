@@ -18,7 +18,7 @@ from transformers import (AutoTokenizer, AutoModel, AutoConfig, T5Tokenizer, T5F
 from tokenizers import Tokenizer
 
 # Add the parent directory to sys.path
-sys.path.append('/home/rsawhney/progen/progen2/')
+sys.path.append('/progen/progen2/')
 
 from models.progen.modeling_progen import ProGenForCausalLM, ProGenForSequenceClassification
 
@@ -100,7 +100,7 @@ def build_avg_pooling_model(_base_model):
         # model_config = AutoConfig.from_pretrained(_base_model)
         model = AvgPoolingModel(base_model)
     elif 'progen' in _base_model:
-        tokenizer = create_progen_tokenizer_custom(file='/home/rsawhney/progen/progen2/tokenizer.json')
+        tokenizer = create_progen_tokenizer_custom(file='/progen/progen2/tokenizer.json')
         tokenizer.enable_truncation(max_length=1024)
         print("tokenizer loaded")
         # model_config = { "model_type": "progen"}
