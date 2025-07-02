@@ -24,8 +24,6 @@ def get_model_and_tokenizer(weight_path, device='cpu', model_type="t5"):
     tokenizer = T5Tokenizer.from_pretrained(base_model_path, legacy=False)
     print("tokenizer loaded")
     model = T5EncoderModel.from_pretrained(base_model_path)
-    # model = AvgPoolingModel(model)
-    # pdb.set_trace()
     use_lora = True
     if use_lora:
         convert_model(model)
@@ -50,20 +48,18 @@ def run_model(model, tokenizer, sequence, device='cpu'):
     return output
 
 device = 'cuda'
-t5_checkpoint = '/home/rsawhney/PooledAAEmbeddings/prott5_siamese_model_final_checkpoint_ep10.pt'
+t5_checkpoint = 'prott5_siamese_model_final_checkpoint_ep10.pt'
 
 model, tokenizer = get_model_and_tokenizer(t5_checkpoint, device=device)
 
 
 pdb.set_trace()
 
-data_dir = "/data/rajan/vog"
-emb_dir = f"{data_dir}/emb"
-t5_ft_emb_dir = f"{emb_dir}/prot_t5_xl/seq/contrastive"
+t5_ft_emb_dir = "prot_t5_xl/seq/contrastive"
 
 
 # NOTE: for seq
-dataset = pd.read_pickle(open("/data/rajan/vog/data-pkls/vog_seq_test_df.pkl", "rb"))
+dataset = pd.read_pickle(open("vog_seq_test_df.pkl", "rb"))
 print(dataset)
 filtered_df = dataset.groupby('labels').filter(lambda x: len(x) >= 10).copy()
 seq_ids = filtered_df.protein_id.tolist()
@@ -80,7 +76,6 @@ for i, (seq_id, sequence) in tqdm(enumerate(id_seq_zip), total=len(seq_ids)):
     embedding = run_model(model, tokenizer, sequence, device=device)
     np.save(f"{t5_ft_emb_dir}/{seq_id}", embedding[0])
     # NOTE: embeddings have a start and end padding token
-    # print('Embeddings saved for:', seq_id)
     torch.cuda.empty_cache()
 print('Done. Embeddings saved at:', t5_ft_emb_dir)
 

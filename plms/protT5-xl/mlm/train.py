@@ -17,7 +17,6 @@ import inspect
 import re
 import pandas as pd
 from torch.utils.data import DataLoader
-import pdb
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -65,7 +64,7 @@ class TrainingArguments(transformers.TrainingArguments):
         metadata={"help": "Additional trainable parameters except LoRA weights, if low rank training."},
     )
     output_dir: str = field(
-        default="/home/rsawhney/models/clm-protrans-lora/new", 
+        default="/home/models/clm-protrans-lora/new", 
         metadata={"help": "The output directory where the model predictions and checkpoints will be written."},
     )
     save_steps: float = field(
@@ -184,8 +183,7 @@ def train():
     tokenizer = T5Tokenizer.from_pretrained("Rostlab/prot_t5_xl_uniref50")
     model = transformers.T5ForConditionalGeneration.from_pretrained("Rostlab/prot_t5_xl_uniref50")
 
-    # train_dataset = pd.read_csv("~/vog_train_dataset.tsv")
-    train_dataset = pd.read_csv('/home/rsawhney/finetune_esm_classification/train_dataset.tsv')
+    train_dataset = pd.read_csv('train.tsv')
 
     # Keep only vogs with 10 sequences since we classify back to the vog
 
@@ -216,20 +214,10 @@ def train():
     input_ids = torch.tensor(ids['input_ids']).to(device)
     attention_mask = torch.tensor(ids['attention_mask']).to(device)
 
-    # torch.save(ids['input_ids'], '/home/thibaut/protrans/tokenized_input_ids.pt')
-    # torch.save(ids['attention_mask'], '/home/thibaut/protrans/tokenized_attention_mask.pt')
 
     test_input_ids = torch.tensor(test_ids['input_ids']).to(device)
     test_attention_mask = torch.tensor(test_ids['attention_mask']).to(device)
 
-    # torch.save(test_input_ids, '/home/thibaut/protrans/test_tokenized_input_ids.pt')
-    # torch.save(test_attention_mask, '/home/thibaut/protrans/test_tokenized_attention_mask.pt')
-
-
-    # input_ids = torch.load('/scratch/bbtw/mbelcaid/thibaut/protrans/tokenized_input_ids.pt')
-    # attention_mask = torch.load('/scratch/bbtw/mbelcaid/thibaut/protrans/tokenized_attention_mask.pt')
-    # test_input_ids = torch.load('/scratch/bbtw/mbelcaid/thibaut/protrans/test_tokenized_input_ids.pt')
-    # test_attention_mask = torch.load('/scratch/bbtw/mbelcaid/thibaut/protrans/test_tokenized_attention_mask.pt')
 
     # Assurez-vous de les envoyer sur le bon périphérique si vous utilisez CUDA
     input_ids = input_ids.to(device)
@@ -285,8 +273,8 @@ def train():
     tokenized_dataset = dataset_dict.map(tokenize_and_format, batched=True, batch_size=50)
     tokenized_dataset = tokenized_dataset.map(convert_to_tensors, batched=True, batch_size=50)
     
-    tokenized_dataset.save_to_disk("/home/thibaut/protrans/")
-    #tokenized_dataset = load_from_disk("/home/thibaut/protrans/")
+    tokenized_dataset.save_to_disk("/home/protrans/")
+    #tokenized_dataset = load_from_disk("/home/protrans/")
 
     print(type(tokenized_dataset["train"]['labels']))
     print(type(tokenized_dataset["train"]['input_ids']))
@@ -325,9 +313,7 @@ def train():
         if "lora_A" in name or "lora_B" in name:
             lora_params.append(param)
             param.requires_grad = True
-    pdb.set_trace()
     print_trainable_parameters(model)
-    pdb.set_trace()
 
     trainer = Trainer(
         model=model, tokenizer=tokenizer, args=training_args,

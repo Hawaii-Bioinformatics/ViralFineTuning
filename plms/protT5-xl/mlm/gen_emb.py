@@ -20,20 +20,6 @@ from torch.utils.data import DataLoader
 import pickle
 from tqdm import tqdm
 
-# directories
-data_dir = "/data/rajan/vog"
-pkl_dir = f"{data_dir}/data-pkls"
-msa_fasta_dir = f"{data_dir}/fasta"
-saved_mod_dir = "saved_mods"
-
-emb_dir = f"{data_dir}/emb"
-esm2_3B_emb_dir = f"{emb_dir}/esm2_3B"
-esm2_3B_ft_emb_dir = f"{emb_dir}/esm2_3B_ft"
-cont_emb_dir = f"{esm2_3B_ft_emb_dir}/contrastive"
-
-esm2_650M_emb_dir = f"{emb_dir}/esm2_650M"
-esm2_650M_ft_emb_dir = f"{emb_dir}/esm2_650M_ft"
-lora_cls_emb_dir = f"{esm2_650M_ft_emb_dir}/lora_cls"
 
 # configs
 msa_t_dim = 768
@@ -62,7 +48,7 @@ import pdb
 pdb.set_trace()
 
 # NOTE: for seq
-dataset = pd.read_pickle(open("/data/rajan/vog/data-pkls/vog_seq_test_df.pkl", "rb"))
+dataset = pd.read_pickle(open("vog_seq_test_df.pkl", "rb"))
 vog_seq_df = dataset.groupby('labels').filter(lambda x: len(x) >= 10)
 print(vog_seq_df)
 # ## NOTE: regen embs for seq len > 500 # TODO: remove for next time
@@ -72,14 +58,8 @@ seq_ids = vog_seq_df.protein_id.to_list()
 sequences = vog_seq_df.protein_seq.to_list()
 sequences = [" ".join(list(re.sub(r"[UZOB-]", "X", sequence))) for sequence in sequences]
 
-# # NOTE: for MSA
-# dataset = pd.read_pickle(open("/data/rajan/vog/data-pkls/new_sel_msa_w_cons_col_df.pkl", "rb"))
-# dataset
-# seq_ids = dataset.seq_id.to_list()
-# sequences = dataset.seq_str.to_list()
-# sequences = [" ".join(list(re.sub(r"[UZOB-]", "X", sequence))) for sequence in sequences]
 
-output_dir = "/data/rajan/vog/emb/prot_t5_xl/seq/ft_mlm_lora"
+output_dir = "prot_t5_xl/seq/ft_mlm_lora"
 error_seqs = []
 print('Generating embeddings...')
 

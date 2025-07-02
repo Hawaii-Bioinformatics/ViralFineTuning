@@ -99,8 +99,7 @@ learning_rate = 2e-5
 # )
 
 print('Reading data')
-# train_dataset = pd.read_csv("./train.tsv")
-train_dataset = pd.read_csv("/home/rsawhney/PooledAAEmbeddings/tmp/tmp_data_dir/train.tsv")
+train_dataset = pd.read_csv("train.tsv")
 
 # Keep only vogs with 10 sequences since we classify back to the vog
 

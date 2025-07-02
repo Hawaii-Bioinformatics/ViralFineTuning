@@ -12,7 +12,7 @@ from tokenizers import Tokenizer
 import sys 
 
 # Add the parent directory to sys.path
-sys.path.append('/home/rsawhney/progen/progen2/')
+sys.path.append('/progen/progen2/') # path to local progen2 github repo
 
 from models.progen.modeling_progen import ProGenForCausalLM, ProGenForSequenceClassification
 
@@ -27,8 +27,8 @@ def remap(layers):
 
 
 def get_model_and_tokenizer(weight_path, device='cpu', model_type="t5"):
-    base_model_path = "/home/rsawhney/progen/progen2/checkpoints/progen2-large"
-    tokenizer = create_progen_tokenizer_custom(file='/home/rsawhney/progen/progen2/tokenizer.json')
+    base_model_path = "/progen/progen2/checkpoints/progen2-large" # # path to local progen2 github repo
+    tokenizer = create_progen_tokenizer_custom(file='/progen/progen2/tokenizer.json')
     tokenizer.enable_truncation(max_length=1024)
     print("tokenizer loaded")
     model = create_progen_model(base_model_path, type='causal')
@@ -73,20 +73,16 @@ def run_model(model, tokenizer, sequence, device='cpu'):
     return output
 
 device = 'cuda'
-progen_checkpoint = '/home/rsawhney/PooledAAEmbeddings/progen_siamese_model_final_checkpoint.pt'
+progen_checkpoint = '/progen_siamese_model_final_checkpoint.pt' # fine-tuned checkpoint
 model, tokenizer = get_model_and_tokenizer(progen_checkpoint, device=device)
 
 
 # pdb.set_trace()
 
-data_dir = "/data/rajan/vog"
-emb_dir = f"{data_dir}/emb"
-progen_ft_emb_dir = f"{emb_dir}/progen_large/seq/contrastive"
-# output_path = '/data/rajan/vog/emb/esm2_3B/msa/contrastive'
-
+progen_ft_emb_dir = "/progen_large/seq/contrastive"
 
 # NOTE: for seq
-dataset = pd.read_pickle(open("/data/rajan/vog/data-pkls/vog_seq_test_df.pkl", "rb"))
+dataset = pd.read_pickle(open("vog_seq_test_df.pkl", "rb"))
 print(dataset)
 filtered_df = dataset.groupby('labels').filter(lambda x: len(x) >= 10).copy()
 seq_ids = filtered_df.protein_id.tolist()

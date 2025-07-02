@@ -13,7 +13,6 @@ from torch.utils.data import DataLoader, Dataset, RandomSampler, SequentialSampl
 from transformers.trainer_utils import seed_worker
 from transformers import EsmForMaskedLM
 import sys
-import pdb
 
 # Add the parent directory to sys.path
 sys.path.append('progen/progen2/')
@@ -197,7 +196,6 @@ for name, param in model.named_parameters():
         param.requires_grad = True
         lora_params.append(param)
 
-pdb.set_trace()
 
 mlm = True
 if mlm : 
@@ -211,8 +209,6 @@ train_list = [data for data in data_loader]
 print(train_list[0])
 test_list = [data for data in test_dataloader]
 
-import pdb
-pdb.set_trace()
 
 training_args = transformers.TrainingArguments(
     output_dir="./results-progen-mlm",

@@ -6,16 +6,6 @@ from transformers import AutoTokenizer, EsmForMaskedLM
 import torch
 import pandas as pd
 from tqdm import tqdm
-import pdb
-
-# directories
-data_dir = "/data/rajan/vog"
-pkl_dir = f"{data_dir}/data-pkls"
-msa_fasta_dir = f"{data_dir}/fasta"
-saved_mod_dir = "saved_mods"
-
-emb_dir = f"{data_dir}/emb"
-esm2_3B_emb_dir = f"{emb_dir}/esm2_3B"
 
 
 # configs
@@ -35,7 +25,7 @@ torch.cuda.empty_cache()
 # read data
 
 print('Reading data')
-dataset = pd.read_pickle(open("/data/rajan/vog/data-pkls/vog_seq_test_df.pkl", "rb"))
+dataset = pd.read_pickle(open("vog_seq_test_df.pkl", "rb"))
 print(dataset)
 filtered_df = dataset.groupby('labels').filter(lambda x: len(x) >= 10).copy()
 filtered_seq_ids = filtered_df.protein_id.tolist()
@@ -65,10 +55,9 @@ labels = torch.tensor(dataset['labels_codes'].values, dtype = torch.long)
 
 error_seqs = []
 
-output_dir = "/data/rajan/vog/emb/esm2_3B/seq/ft_mlm_lora/" # for seqs
+output_dir = "esm2_3B/seq/ft_mlm_lora/" # # where embs are saved
 
 print('Generating embeddings...')
-pdb.set_trace()
 id_seq_zip = zip(seq_ids, sequences)
 for i, (seq_id, sequence) in tqdm(enumerate(id_seq_zip), total=len(seq_ids)):
     if seq_id in filtered_seq_ids: # gen emb for relevant seq_ids

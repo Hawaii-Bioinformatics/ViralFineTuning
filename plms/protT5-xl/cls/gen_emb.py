@@ -20,16 +20,6 @@ from torch.utils.data import DataLoader
 import pickle
 from tqdm import tqdm
 
-import pdb
-
-
-# directories
-data_dir = "/data/rajan/vog"
-pkl_dir = f"{data_dir}/data-pkls"
-msa_fasta_dir = f"{data_dir}/fasta"
-saved_mod_dir = "saved_mods"
-
-emb_dir = f"{data_dir}/emb"
 
 layer_protTrans_xl = 24
 
@@ -43,14 +33,10 @@ torch.cuda.empty_cache()
 print('Reading data')
 
 # # NOTE: for seqs
-dataset = pd.read_pickle(open("/data/rajan/vog/data-pkls/vog_seq_test_df.pkl", "rb"))
+dataset = pd.read_pickle(open("vog_seq_test_df.pkl", "rb"))
 
 vog_seq_df = dataset.groupby('labels').filter(lambda x: len(x) >= 10)
 print(vog_seq_df)
-# ## NOTE: regen embs for seq len > 500 # TODO: remove for next time
-# vog_seq_df = vog_seq_df[vog_seq_df.protein_seq.str.len()>=500]
-# print(vog_seq_df)
-pdb.set_trace()
 
 seq_ids = vog_seq_df.protein_id.to_list()
 sequences = vog_seq_df.protein_seq.to_list()
@@ -58,17 +44,6 @@ sequences = [" ".join(list(re.sub(r"[UZOB-]", "X", sequence))) for sequence in s
 labels = set(vog_seq_df.labels.tolist())
 id2label = {i:l for i,l in enumerate(labels)}
 label2id = {l:i for i,l in enumerate(labels)}
-
-
-# # NOTE: for MSA
-# dataset = pd.read_pickle(open("/data/rajan/vog/data-pkls/new_sel_msa_w_cons_col_df.pkl", "rb"))
-# print(dataset)
-# seq_ids = dataset.seq_id.to_list()
-# sequences = dataset.seq_str.to_list()
-# sequences = [" ".join(list(re.sub(r"[UZOB-]", "X", sequence))) for sequence in sequences]
-# labels = set(dataset.align_id.tolist())
-# id2label = {i:l for i,l in enumerate(labels)}
-# label2id = {l:i for i,l in enumerate(labels)}
 
 
 print('loading mods')
@@ -85,15 +60,9 @@ print(model)
 vog_seq_df['labels'] = vog_seq_df['labels'].astype('category')
 vog_seq_df['labels_codes'] = vog_seq_df['labels'].cat.codes
 labels = torch.tensor(vog_seq_df['labels_codes'].values, dtype = torch.long).tolist()
-output_dir = "/data/rajan/vog/emb/prot_t5_xl/seq/ft_cls_lora"
+output_dir = "prot_t5_xl/seq/ft_cls_lora"
 
-# # NOTE: for msa
-# dataset['align_id'] = dataset['align_id'].astype('category')
-# dataset['labels_codes'] = dataset['align_id'].cat.codes
-# labels = torch.tensor(dataset['labels_codes'].values, dtype = torch.long).tolist()
-# output_dir = "/data/rajan/vog/emb/prot_t5_xl/msa/ft_cls_lora"
 
-# pdb.set_trace()
 error_seqs = []
 print('Generating embeddings...')
 
